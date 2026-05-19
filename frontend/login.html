@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <link href="styles/tailwind.min.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="bg-green-700 text-white p-4 flex justify-between">
+    <span class="font-bold">Ethical Fashion</span>
+    <div>
+      <a href="index.html" class="mr-4">Home</a>
+      <a href="products.html">Products</a>
+    </div>
+  </nav>
+  <main class="max-w-md mx-auto mt-8 bg-white shadow-md rounded p-6">
+    <form id="loginForm">
+      <h1 class="text-xl font-bold mb-4">Login</h1>
+      <div id="error" class="text-red-600 mb-2"></div>
+      <input id="username" class="w-full border p-2 mb-2 rounded" placeholder="Username">
+      <input id="password" class="w-full border p-2 mb-2 rounded" placeholder="Password" type="password">
+      <button class="bg-green-700 text-white py-2 px-4 rounded w-full">Login</button>
+    </form>
+  </main>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

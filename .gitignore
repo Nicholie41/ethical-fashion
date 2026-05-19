@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Python
+**/__pycache__/
+**/*.py[cod]
+**/venv/
+**/.venv/
+**/.env
+**/.env.local
+
+# Build output
+dist/
+build/
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# Secrets (never commit)
+.env
+.env.*
+!.env.example
+
+# Mongo / Docker local data
+mongo_data/
+
+# Mobile (React Native / Expo)
+.expo/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Misc accidental empty command files (safe to delete locally)
+/cd
+/nodemon
+/npm
+/query

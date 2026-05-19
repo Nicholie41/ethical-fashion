@@ -1,0 +1,371 @@
+ETHICAL FASHION MARKETPLACE PROJECT
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           ETHICAL FASHION MARKETPLACE PROJECT                   │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                        │
+                    ┌───────────────────┼───────────────────┐
+                    │                   │                   │
+        ┌───────────▼──────────┐ ┌─────▼─────┐ ┌───────────▼──────────┐
+        │   USER & BRAND       │ │ PRODUCT & │ │  SUSTAINABILITY      │
+        │   MANAGEMENT         │ │MARKETPLACE│ │  SCORING ENGINE      │
+        └──────────────────────┘ └───────────┘ └──────────────────────┘
+                    │                   │                   │
+        ┌───────────┼──────────┐ ┌─────┼─────┐ ┌───────────┼──────────┐
+        │           │          │ │     │     │ │           │          │
+    ┌───▼───┐   ┌───▼───┐  ┌───▼───┐ │ ┌───▼───┐ ┌───▼───┐ ┌───▼───┐ ┌───▼───┐
+    │ USER  │   │ BRAND │  │ROLE-  │ │ │PRODUCT│ │SHOPPING│ │LABOR & │ │MATERIAL│
+    │CRUD   │   │APPROVAL│  │BASED  │ │ │LISTING│ │ CART   │ │CHECKS  │ │CHECKS  │
+    └───────┘   └───────┘  │ACCESS │ │ └───────┘ └───────┘ └───────┘ └───────┘
+                           └───────┘ │
+                                     │
+                           ┌─────────▼─────────┐
+                           │   EVALUATION &    │
+                           │     TESTING       │
+                           └───────────────────┘
+                                     │
+                           ┌─────────┼─────────┐
+                           │         │         │
+                       ┌───▼───┐ ┌───▼───┐ ┌───▼───┐
+                       │USABILITY│ │ACCESSIBILITY│ │ERROR   │
+                       │TESTING │ │  REVIEW     │ │HANDLING│
+                       └───────┘ └─────────────┘ └───────┘
+                                     │
+                           ┌─────────▼─────────┐
+                           │  DEPLOYMENT &     │
+                           │  DOCUMENTATION    │
+                           └───────────────────┘
+                                     │
+                           ┌─────────┼─────────┐
+                           │         │         │
+                       ┌───▼───┐ ┌───▼───┐ ┌───▼───┐
+                       │CLOUD  │ │TECHNICAL│ │USER   │
+                       │SETUP  │ │DOCS    │ │GUIDES │
+                       └───────┘ └────────┘ └───────┘
+                                     │
+                           ┌─────────▼─────────┐
+                           │  REPORTING &      │
+                           │   ANALYTICS       │
+                           └───────────────────┘
+                                     │
+                           ┌─────────┼─────────┐
+                           │         │         │
+                       ┌───▼───┐ ┌───▼───┐ ┌───▼───┐
+                       │ADMIN  │ │SUSTAINABILITY│ │PROJECT │
+                       │DASHBOARDS│ │  REPORTS    │ │REPORTS │
+                       └───────┘ └─────────────┘ └───────┘
+
+================================================================================
+IMPLEMENTATION STATUS:
+✅ COMPLETED (95%): User & Brand Management, Product & Marketplace
+🔄 IN PROGRESS (60%): Evaluation & Testing, Reporting & Analytics  
+📋 PLANNED (30%): Sustainability Scoring Engine, Deployment & Documentation
+
+TECHNOLOGY STACK:
+Frontend: React.js 18, Tailwind CSS, React Router DOM
+Backend: Node.js, Express.js, MongoDB, Mongoose
+Authentication: JWT, bcrypt, role-based middleware
+Real-time: WebSocket integration, notification system
+File Handling: Multer, image processing
+
+KEY FEATURES IMPLEMENTED:
+- Multi-role user system (Customer, Supplier, Admin)
+- Real-time notification system
+- Product approval workflows
+- Multi-selection shopping cart
+- Supplier analytics dashboard
+- Admin user management
+- Responsive design with dark mode
+- Secure authentication and authorization
+
+================================================================================
+DATABASE SCHEMA DIAGRAM - MERMAID CODE
+================================================================================
+
+```mermaid
+erDiagram
+    USERS {
+        ObjectId _id PK "Primary Key"
+        String username "Unique username"
+        String email "User email address"
+        String password "Hashed password"
+        String role "customer/supplier/admin"
+        Object profile "firstName, lastName, address"
+        Object gamification "points, level, badges"
+        Date createdAt "Account creation date"
+        Date lastLogin "Last login timestamp"
+    }
+
+    PRODUCTS {
+        ObjectId _id PK "Primary Key"
+        String name "Product name"
+        String description "Product description"
+        Number price "Product price in USD"
+        String category "Fashion category"
+        ObjectId brandId FK "Links to Brands collection"
+        Array images "Product image URLs"
+        Object sustainability "score, criteria, certifications"
+        Number stock "Available quantity"
+        String status "active/inactive"
+        Date createdAt "Product creation date"
+    }
+
+    BRANDS {
+        ObjectId _id PK "Primary Key"
+        String name "Brand name"
+        String description "Brand description"
+        String logo "Brand logo URL"
+        Object sustainability "Environmental & social scores"
+        Array certifications "Sustainability certifications"
+        String status "verified/pending/rejected"
+        ObjectId supplierId FK "Links to Users collection"
+        Date createdAt "Brand creation date"
+    }
+
+    ORDERS {
+        ObjectId _id PK "Primary Key"
+        ObjectId userId FK "Links to Users collection"
+        Array products "Ordered products with quantities"
+        Number totalAmount "Total order value"
+        String status "pending/confirmed/shipped/delivered"
+        Object shipping "Delivery address and method"
+        Object payment "Payment method and status"
+        Date createdAt "Order creation date"
+    }
+
+    USERS ||--o{ ORDERS : "places"
+    BRANDS ||--o{ PRODUCTS : "sells"
+    USERS ||--o{ BRANDS : "manages"
+```
+
+DATABASE SCHEMA EXPLANATION:
+================================================================================
+
+COLLECTIONS:
+1. USERS: Stores customer, supplier, and admin account information
+2. PRODUCTS: Contains all product data with sustainability scoring
+3. BRANDS: Manages brand information and sustainability verification
+4. ORDERS: Tracks all purchase transactions and order history
+
+KEY RELATIONSHIPS:
+- Users → Orders: One user can place multiple orders
+- Brands → Products: One brand can sell multiple products
+- Users → Brands: Suppliers manage their brand profiles
+
+FIELD DESCRIPTIONS:
+- PK = Primary Key (unique identifier)
+- FK = Foreign Key (links to other collections)
+- Object = Complex data structure (nested fields)
+- Array = List of items
+- Date = Timestamp information
+
+HOW TO CREATE THE DIAGRAM:
+1. Go to https://app.diagrams.net/
+2. Create new diagram
+3. Insert → Advanced → Mermaid
+4. Paste the code above
+5. Click Insert
+6. Customize colors and styling
+7. Export as PNG for project report
+
+================================================================================
+USE CASE DIAGRAM - MERMAID CODE
+================================================================================
+
+```mermaid
+graph TD
+    %% Stick Figure Actors at the top
+    subgraph "ACTORS"
+        G1["👤 Customer"]
+        G2["👤 Supplier"] 
+        G3["👤 Admin"]
+    end
+    
+    subgraph "ETHICAL FASHION MARKETPLACE PLATFORM"
+        %% Authentication Use Cases
+        A[Create Profile]
+        B[Login/Logout]
+        C[Manage Profile]
+        D[View Dashboard]
+        
+        %% Product Management Use Cases
+        E[Browse Products]
+        F[Search & Filter Products]
+        G[View Product Details]
+        H[Add to Cart]
+        I[Create Product Listing]
+        J[Edit Product]
+        K[Delete Product]
+        L[Upload Product Images]
+        
+        %% Brand Management Use Cases
+        M[Register Brand]
+        N[Update Brand Information]
+        O[Upload Brand Logo]
+        P[View Brand Analytics]
+        Q[Manage Certifications]
+        
+        %% Order Management Use Cases
+        R[Place Order]
+        S[View Order History]
+        T[Track Order Status]
+        U[Process Orders]
+        V[Update Order Status]
+        
+        %% Sustainability Use Cases
+        W[View Sustainability Score]
+        X[Rate Products]
+        Y[Earn Points]
+        Z[View Badges]
+        AA[Check Certifications]
+        
+        %% Admin Use Cases
+        BB[Manage Users]
+        CC[Approve Brands]
+        DD[Monitor Analytics]
+        EE[Generate Reports]
+        FF[System Settings]
+    end
+    
+    %% Customer Associations
+    G1 --> A
+    G1 --> B
+    G1 --> C
+    G1 --> D
+    G1 --> E
+    G1 --> F
+    G1 --> G
+    G1 --> H
+    G1 --> R
+    G1 --> S
+    G1 --> T
+    G1 --> W
+    G1 --> X
+    G1 --> Y
+    G1 --> Z
+    G1 --> AA
+    
+    %% Supplier Associations
+    G2 --> A
+    G2 --> B
+    G2 --> C
+    G2 --> D
+    G2 --> I
+    G2 --> J
+    G2 --> K
+    G2 --> L
+    G2 --> M
+    G2 --> N
+    G2 --> O
+    G2 --> P
+    G2 --> Q
+    G2 --> S
+    G2 --> U
+    G2 --> V
+    
+    %% Admin Associations
+    G3 --> A
+    G3 --> B
+    G3 --> C
+    G3 --> D
+    G3 --> BB
+    G3 --> CC
+    G3 --> DD
+    G3 --> EE
+    G3 --> FF
+    G3 --> S
+    G3 --> U
+    G3 --> V
+    
+    %% Styling for UML Use Case Diagram
+    classDef systemBoundary fill:#fff9c4,stroke:#f57f17,stroke-width:3px
+    classDef useCase fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef actor fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    
+    class A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA,BB,CC,DD,EE,FF useCase
+    class G1,G2,G3 actor
+```
+
+USE CASE DIAGRAM EXPLANATION:
+================================================================================
+
+STANDARD UML USE CASE DIAGRAM FORMAT (TOP TO BOTTOM):
+
+ACTORS (Stick Figures at Top):
+- 👤 CUSTOMER: End users who browse and purchase ethical fashion products
+- 👤 SUPPLIER: Brand owners who list and manage their products
+- 👤 ADMIN: Platform administrators who manage the system
+
+SYSTEM BOUNDARY (Below Actors):
+- Large rectangular box labeled "ETHICAL FASHION MARKETPLACE PLATFORM"
+- Contains all use cases (oval shapes) within the system scope
+
+USE CASES (Oval Shapes - Organized by Category):
+
+AUTHENTICATION & PROFILE:
+- Create Profile: Register new user account
+- Login/Logout: Access and exit the system
+- Manage Profile: Update personal information
+- View Dashboard: Access personalized dashboard
+
+PRODUCT MANAGEMENT:
+- Browse Products: View product catalog
+- Search & Filter Products: Find specific products
+- View Product Details: See detailed product information
+- Add to Cart: Add items to shopping cart
+- Create Product Listing: Suppliers add new products
+- Edit Product: Modify product information
+- Delete Product: Remove products from catalog
+- Upload Product Images: Add product photos
+
+BRAND MANAGEMENT:
+- Register Brand: Suppliers create brand profiles
+- Update Brand Information: Modify brand information
+- Upload Brand Logo: Add brand visual identity
+- View Brand Analytics: Track brand performance
+- Manage Certifications: Handle sustainability certifications
+
+ORDER MANAGEMENT:
+- Place Order: Complete purchase transactions
+- View Order History: Access past orders
+- Track Order Status: Monitor delivery progress
+- Process Orders: Handle order fulfillment
+- Update Order Status: Modify order states
+
+SUSTAINABILITY:
+- View Sustainability Score: See product sustainability ratings
+- Rate Products: Provide product feedback
+- Earn Points: Gain gamification rewards
+- View Badges: See achievement badges
+- Check Certifications: Verify sustainability claims
+
+ADMIN FUNCTIONS:
+- Manage Users: Control user accounts
+- Approve Brands: Verify brand applications
+- Monitor Analytics: Track platform performance
+- Generate Reports: Create system reports
+- System Settings: Configure platform settings
+
+ASSOCIATIONS (Lines):
+- Lines flow from top (actors) to bottom (use cases)
+- Shows which actors can perform which functions
+- Demonstrates role-based access control
+
+KEY FEATURES:
+- Top-to-bottom flow for better readability
+- Standard UML notation with stick figure emojis for actors
+- Oval shapes for use cases within system boundary
+- Clear associations showing actor-use case relationships
+- Professional styling suitable for academic reports
+
+HOW TO CREATE THE DIAGRAM:
+1. Go to https://app.diagrams.net/
+2. Create new diagram
+3. Insert → Advanced → Mermaid
+4. Paste the code above
+5. Click Insert
+6. Customize colors and styling
+7. Export as PNG for project report
+
+================================================================================ 

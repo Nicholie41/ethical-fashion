@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethical Fashion Marketplace - WBS Diagram</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        .title {
+            text-align: center;
+            color: #2d3748;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .wbs-tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .root {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+        
+        .level1 {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .work-package {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            min-width: 150px;
+            box-shadow: 0 6px 12px rgba(72, 187, 120, 0.3);
+            position: relative;
+        }
+        
+        .work-package.completed {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+        }
+        
+        .work-package.in-progress {
+            background: linear-gradient(45deg, #ed8936, #dd6b20);
+        }
+        
+        .work-package.planned {
+            background: linear-gradient(45deg, #e53e3e, #c53030);
+        }
+        
+        .level2 {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        
+        .sub-task {
+            background: linear-gradient(45deg, #4299e1, #3182ce);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            box-shadow: 0 4px 8px rgba(66, 153, 225, 0.3);
+        }
+        
+        .sub-task.completed {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+        }
+        
+        .sub-task.in-progress {
+            background: linear-gradient(45deg, #ed8936, #dd6b20);
+        }
+        
+        .sub-task.planned {
+            background: linear-gradient(45deg, #e53e3e, #c53030);
+        }
+        
+        .connector {
+            width: 2px;
+            height: 20px;
+            background: linear-gradient(to bottom, #667eea, #764ba2);
+            margin: 0 auto;
+        }
+        
+        .status-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .status-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .status-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-icon.completed {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .status-icon.in-progress {
+            background: #ed8936;
+            color: white;
+        }
+        
+        .status-icon.planned {
+            background: #e53e3e;
+            color: white;
+        }
+        
+        .tech-stack {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #fff5f5, #fed7d7);
+            border-radius: 15px;
+            border-left: 5px solid #e53e3e;
+        }
+        
+        .tech-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        
+        .tech-item {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin: 5px;
+            display: inline-block;
+            font-size: 12px;
+            color: #2d3748;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .features-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0fff4, #c6f6d5);
+            border-radius: 15px;
+            border-left: 5px solid #48bb78;
+        }
+        
+        .features-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        
+        .feature-item {
+            background: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin: 3px;
+            display: inline-block;
+            font-size: 11px;
+            color: #2d3748;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Ethical Fashion Marketplace Project</h1>
+        
+        <div class="wbs-tree">
+            <div class="root">ETHICAL FASHION MARKETPLACE PROJECT</div>
+            <div class="connector"></div>
+            
+            <div class="level1">
+                <div class="work-package completed">
+                    USER & BRAND<br>MANAGEMENT
+                    <div class="level2">
+                        <div class="sub-task completed">USER CRUD</div>
+                        <div class="sub-task completed">BRAND APPROVAL</div>
+                        <div class="sub-task completed">ROLE-BASED ACCESS</div>
+                    </div>
+                </div>
+                
+                <div class="work-package completed">
+                    PRODUCT &<br>MARKETPLACE
+                    <div class="level2">
+                        <div class="sub-task completed">PRODUCT LISTING</div>
+                        <div class="sub-task completed">SHOPPING CART</div>
+                        <div class="sub-task completed">ORDER PROCESSING</div>
+                    </div>
+                </div>
+                
+                <div class="work-package planned">
+                    SUSTAINABILITY<br>SCORING ENGINE
+                    <div class="level2">
+                        <div class="sub-task planned">LABOR CHECKS</div>
+                        <div class="sub-task planned">MATERIAL CHECKS</div>
+                        <div class="sub-task planned">CERTIFICATION</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="level1">
+                <div class="work-package in-progress">
+                    EVALUATION &<br>TESTING
+                    <div class="level2">
+                        <div class="sub-task in-progress">USABILITY TESTING</div>
+                        <div class="sub-task in-progress">ACCESSIBILITY</div>
+                        <div class="sub-task in-progress">ERROR HANDLING</div>
+                    </div>
+                </div>
+                
+                <div class="work-package planned">
+                    DEPLOYMENT &<br>DOCUMENTATION
+                    <div class="level2">
+                        <div class="sub-task planned">CLOUD SETUP</div>
+                        <div class="sub-task planned">TECHNICAL DOCS</div>
+                        <div class="sub-task planned">USER GUIDES</div>
+                    </div>
+                </div>
+                
+                <div class="work-package in-progress">
+                    REPORTING &<br>ANALYTICS
+                    <div class="level2">
+                        <div class="sub-task completed">ADMIN DASHBOARDS</div>
+                        <div class="sub-task in-progress">SUSTAINABILITY REPORTS</div>
+                        <div class="sub-task planned">PROJECT REPORTS</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-section">
+            <div class="status-title">Implementation Status</div>
+            <div class="status-item">
+                <div class="status-icon completed">✅</div>
+                <span><strong>COMPLETED (95%):</strong> User & Brand Management, Product & Marketplace</span>
+            </div>
+            <div class="status-item">
+                <div class="status-icon in-progress">🔄</div>
+                <span><strong>IN PROGRESS (60%):</strong> Evaluation & Testing, Reporting & Analytics</span>
+            </div>
+            <div class="status-item">
+                <div class="status-icon planned">📋</div>
+                <span><strong>PLANNED (30%):</strong> Sustainability Scoring Engine, Deployment & Documentation</span>
+            </div>
+        </div>
+        
+        <div class="tech-stack">
+            <div class="tech-title">Technology Stack</div>
+            <div class="tech-item">React.js 18</div>
+            <div class="tech-item">Tailwind CSS</div>
+            <div class="tech-item">Node.js</div>
+            <div class="tech-item">Express.js</div>
+            <div class="tech-item">MongoDB</div>
+            <div class="tech-item">JWT Authentication</div>
+            <div class="tech-item">WebSocket</div>
+            <div class="tech-item">Multer</div>
+        </div>
+        
+        <div class="features-section">
+            <div class="features-title">Key Features Implemented</div>
+            <div class="feature-item">Multi-role User System</div>
+            <div class="feature-item">Real-time Notifications</div>
+            <div class="feature-item">Product Approval Workflows</div>
+            <div class="feature-item">Multi-selection Shopping Cart</div>
+            <div class="feature-item">Supplier Analytics Dashboard</div>
+            <div class="feature-item">Admin User Management</div>
+            <div class="feature-item">Responsive Design</div>
+            <div class="feature-item">Dark Mode</div>
+            <div class="feature-item">Secure Authentication</div>
+        </div>
+    </div>
+</body>
+</html> 
