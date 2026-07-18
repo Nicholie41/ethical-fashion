@@ -199,7 +199,7 @@ function App() {
     async function fetchNotifications() {
       if (!token) return setNotifications([]);
       try {
-        const res = await fetch("http://localhost:5000/api/notifications", {
+        const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/notifications`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {

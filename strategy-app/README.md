@@ -12,11 +12,16 @@
    - `cd ../backend && npm install`
    - `cd ../python-analytics && python -m venv venv`
    - `venv\\Scripts\\activate` (Windows) then `pip install -r requirements.txt`
-2. Run apps in three terminals:
+2. Copy env examples (optional — defaults match localhost):
+   - `cp backend/.env.example backend/.env`
+   - `cp frontend/.env.example frontend/.env`
+3. Run apps in three terminals:
    - `cd frontend && npm run dev`
    - `cd backend && npm run dev`
    - `cd python-analytics && venv\\Scripts\\activate && python app.py`
-3. Open `http://localhost:3000`
+4. Open `http://localhost:3000`
+
+Frontend URLs are configured via `VITE_BACKEND_URL` and `VITE_ANALYTICS_URL` (see `frontend/.env.example`).
 
 ## Quick Start (Docker)
 1. Ensure Docker Desktop is running.

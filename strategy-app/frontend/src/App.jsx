@@ -1,73 +1,256 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
+import AppShell from "./components/AppShell";
+import AuthPage from "./components/AuthPage";
+import InitiativesPanel from "./components/InitiativesPanel";
+import LiveFeed from "./components/LiveFeed";
+import LoadingScreen from "./components/LoadingScreen";
+import OkrPanel from "./components/OkrPanel";
+import PythonVisuals from "./components/PythonVisuals";
 import RevenueChart from "./components/RevenueChart";
+import ScenarioLab from "./components/ScenarioLab";
+import StatCard from "./components/StatCard";
+import AuditLogPanel from "./components/AuditLogPanel";
+import TeamPanel from "./components/TeamPanel";
+import {
+  api,
+  backendBaseUrl,
+  clearAccessToken,
+  configureAuthHandlers,
+  getAccessToken,
+  setAccessToken
+} from "./api/client";
 
-const analyticsBaseUrl = "http://localhost:5001";
-const backendBaseUrl = "http://localhost:5000";
+const analyticsBaseUrl = import.meta.env.VITE_ANALYTICS_URL || "http://localhost:5001";
+const currentPeriod = "2026-Q3";
+const isDev = import.meta.env.DEV;
+
+function nextErrorId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
 
 export default function App() {
   const [authMode, setAuthMode] = useState("login");
-  const [name, setName] = useState("Strategy Lead");
-  const [email, setEmail] = useState("lead@strategy.com");
-  const [password, setPassword] = useState("Pass1234!");
-  const [role, setRole] = useState("analyst");
+  const [activeSection, setActiveSection] = useState("overview");
+  const [name, setName] = useState(isDev ? "Strategy Lead" : "");
+  const [email, setEmail] = useState(isDev ? "lead@strategy.com" : "");
+  const [password, setPassword] = useState(isDev ? "Pass1234!" : "");
+  const [organizationName, setOrganizationName] = useState(isDev ? "Acme Strategy Group" : "");
+  const [inviteToken, setInviteToken] = useState("");
   const [token, setToken] = useState("");
   const [user, setUser] = useState(null);
+  const [organization, setOrganization] = useState(null);
   const [initiatives, setInitiatives] = useState([]);
+  const [okrs, setOkrs] = useState([]);
+  const [okrSummary, setOkrSummary] = useState(null);
   const [initiativeName, setInitiativeName] = useState("Cloud modernization");
   const [investment, setInvestment] = useState(100000);
+  const [upliftPercent, setUpliftPercent] = useState(30);
+  const [paybackMonths, setPaybackMonths] = useState(18);
   const [forecast, setForecast] = useState(null);
-  const [chartData, setChartData] = useState([]);
+  const [revenueData, setRevenueData] = useState([]);
+  const [pythonVisuals, setPythonVisuals] = useState(null);
+  const [visualsLoading, setVisualsLoading] = useState(false);
+  const [visualsError, setVisualsError] = useState("");
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [orgProfile, setOrgProfile] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [invites, setInvites] = useState([]);
+  const [lastInviteToken, setLastInviteToken] = useState("");
   const [updates, setUpdates] = useState([]);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState([]);
+  const [restoringSession, setRestoringSession] = useState(true);
+  const [objectiveTitle, setObjectiveTitle] = useState("Accelerate digital transformation outcomes");
+  const [objectivePeriod, setObjectivePeriod] = useState(currentPeriod);
+  const [keyResultTitle, setKeyResultTitle] = useState("Increase initiative ROI above 20%");
+  const [keyResultTarget, setKeyResultTarget] = useState(20);
 
-  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+  const canManageOkrs = user?.role === "admin" || user?.role === "analyst";
+  const isAdmin = user?.role === "admin";
+
+  const pushError = useCallback((message) => {
+    if (!message) return;
+    setErrors((prev) => [...prev, { id: nextErrorId(), message }]);
+  }, []);
+
+  const clearErrors = useCallback(() => {
+    setErrors([]);
+  }, []);
+
+  const dismissError = useCallback((id) => {
+    setErrors((prev) => prev.filter((entry) => entry.id !== id));
+  }, []);
+
+  const formatRequestError = (requestError, fallback) => {
+    const details = requestError.response?.data?.details;
+    const message = requestError.response?.data?.message || fallback;
+    return details ? `${message}: ${details}` : message;
+  };
+
+  const syncAccessToken = (nextToken) => {
+    setAccessToken(nextToken);
+    setToken(nextToken);
+  };
+
+  const logout = async () => {
+    clearErrors();
+    try {
+      await api.post("/api/auth/logout");
+    } catch (_requestError) {
+      // Clear local session even if the server call fails.
+    } finally {
+      clearAccessToken();
+      setToken("");
+      setUser(null);
+      setOrganization(null);
+      setInitiatives([]);
+      setOkrs([]);
+      setOkrSummary(null);
+      setRevenueData([]);
+    }
+  };
 
   const authenticate = async () => {
-    setError("");
+    clearErrors();
     const path = authMode === "register" ? "/register" : "/login";
     const payload =
-      authMode === "register" ? { name, email, password, role } : { email, password };
+      authMode === "register"
+        ? {
+            name,
+            email,
+            password,
+            ...(inviteToken ? { inviteToken } : { organizationName })
+          }
+        : { email, password };
 
     try {
-      const response = await axios.post(`${backendBaseUrl}/api/auth${path}`, payload);
-      setToken(response.data.token);
+      const response = await api.post(`/api/auth${path}`, payload);
+      syncAccessToken(response.data.token);
       setUser(response.data.user);
+      setOrganization(response.data.organization || null);
+      setActiveSection("overview");
     } catch (requestError) {
-      setError(requestError.response?.data?.message || "Authentication failed");
+      pushError(formatRequestError(requestError, "Authentication failed"));
     }
   };
 
   const runScenario = async () => {
-    const response = await axios.post(`${analyticsBaseUrl}/forecast`, {
-      investment,
-      upliftPercent: 30,
-      paybackMonths: 18
-    });
-    setForecast(response.data);
-    if (token) {
-      await axios.post(
-        `${backendBaseUrl}/api/strategy/update`,
-        {
+    clearErrors();
+    try {
+      const response = await axios.post(`${analyticsBaseUrl}/forecast`, {
+        investment,
+        upliftPercent,
+        paybackMonths
+      });
+      setForecast(response.data);
+      if (token) {
+        await api.post("/api/strategy/update", {
           type: "scenario-run",
           investment
-        },
-        { headers: authHeaders }
+        });
+      }
+    } catch (requestError) {
+      pushError(
+        formatRequestError(
+          requestError,
+          "Failed to run forecast — is Python analytics running on port 5001?"
+        )
       );
     }
   };
 
+  const loadRevenueData = async () => {
+    try {
+      const response = await axios.get(`${analyticsBaseUrl}/chart-data`);
+      setRevenueData(response.data);
+    } catch (requestError) {
+      pushError(formatRequestError(requestError, "Failed to load revenue chart data"));
+    }
+  };
+
+  const loadPythonVisuals = async () => {
+    if (!getAccessToken()) return;
+    setVisualsLoading(true);
+    setVisualsError("");
+    try {
+      const response = await api.get("/api/dashboard/visuals");
+      setPythonVisuals(response.data);
+    } catch (requestError) {
+      const details = requestError.response?.data?.details;
+      const message = requestError.response?.data?.message || "Failed to load Python visuals";
+      setVisualsError(details ? `${message}: ${details}` : message);
+      setPythonVisuals(null);
+    } finally {
+      setVisualsLoading(false);
+    }
+  };
+
+  const loadAuditLogs = async () => {
+    if (!token || !isAdmin) return;
+    try {
+      const response = await api.get("/api/audit?limit=40");
+      setAuditLogs(response.data);
+    } catch (requestError) {
+      pushError(formatRequestError(requestError, "Failed to load audit log"));
+    }
+  };
+
+  const loadTeamData = async () => {
+    if (!token || !isAdmin) return;
+    try {
+      const [profileRes, membersRes, invitesRes] = await Promise.all([
+        api.get("/api/org/profile"),
+        api.get("/api/org/members"),
+        api.get("/api/org/invites")
+      ]);
+      setOrgProfile(profileRes.data);
+      setMembers(membersRes.data);
+      setInvites(invitesRes.data);
+    } catch (requestError) {
+      pushError(formatRequestError(requestError, "Failed to load team data"));
+    }
+  };
+
+  const createInvite = async ({ email, role }) => {
+    clearErrors();
+    try {
+      const response = await api.post("/api/org/invites", { email, role });
+      setLastInviteToken(response.data.inviteToken);
+      await loadTeamData();
+    } catch (requestError) {
+      pushError(formatRequestError(requestError, "Failed to create invite"));
+    }
+  };
+
   const loadInitiatives = async () => {
-    if (!token) return;
-    const response = await axios.get(`${backendBaseUrl}/api/initiatives`, { headers: authHeaders });
-    setInitiatives(response.data);
+    if (!getAccessToken()) return;
+    try {
+      const response = await api.get("/api/initiatives");
+      setInitiatives(response.data);
+    } catch (requestError) {
+      pushError(formatRequestError(requestError, "Failed to load initiatives"));
+    }
+  };
+
+  const loadOkrs = async () => {
+    if (!getAccessToken()) return;
+    try {
+      const [okrResponse, summaryResponse] = await Promise.all([
+        api.get("/api/okrs"),
+        api.get("/api/okrs/summary")
+      ]);
+      setOkrs(okrResponse.data);
+      setOkrSummary(summaryResponse.data);
+    } catch (requestError) {
+      pushError(formatRequestError(requestError, "Failed to load OKRs"));
+    }
   };
 
   const createInitiative = async () => {
-    await axios.post(
-      `${backendBaseUrl}/api/initiatives`,
-      {
+    clearErrors();
+    try {
+      await api.post("/api/initiatives", {
         name: initiativeName,
         owner: user.name,
         workstream: "Enterprise Transformation",
@@ -76,135 +259,304 @@ export default function App() {
         expectedROI: 0.22,
         kpis: [{ name: "Process Efficiency", baseline: 60, target: 85, current: 65 }],
         milestones: [{ title: "Phase 1 Rollout", dueDate: new Date(), status: "planned" }]
-      },
-      { headers: authHeaders }
-    );
-    await loadInitiatives();
+      });
+      await loadInitiatives();
+      await loadPythonVisuals();
+    } catch (requestError) {
+      pushError(formatRequestError(requestError, "Failed to create initiative"));
+    }
+  };
+
+  const createOkr = async () => {
+    clearErrors();
+    try {
+      await api.post("/api/okrs", {
+        title: objectiveTitle,
+        period: objectivePeriod,
+        owner: user.name,
+        description: "Organization-level objective linked to strategic initiatives.",
+        keyResults: [
+          {
+            title: keyResultTitle,
+            metricType: "percent",
+            startValue: 0,
+            targetValue: keyResultTarget,
+            currentValue: 0,
+            owner: user.name
+          }
+        ]
+      });
+      await loadOkrs();
+      await loadPythonVisuals();
+    } catch (requestError) {
+      pushError(formatRequestError(requestError, "Failed to create OKR"));
+    }
+  };
+
+  const checkInKeyResult = async (okrId, keyResultId, currentValue) => {
+    clearErrors();
+    try {
+      await api.patch(`/api/okrs/${okrId}/key-results/${keyResultId}`, { currentValue });
+      await loadOkrs();
+      await loadPythonVisuals();
+    } catch (requestError) {
+      pushError(formatRequestError(requestError, "Failed to update key result"));
+    }
   };
 
   useEffect(() => {
-    axios.get(`${analyticsBaseUrl}/chart-data`).then((res) => setChartData(res.data));
+    configureAuthHandlers({
+      onLostSession: () => {
+        setToken("");
+        setUser(null);
+        setOrganization(null);
+        setInitiatives([]);
+        setOkrs([]);
+        setOkrSummary(null);
+      }
+    });
+  }, []);
 
-    const socket = io(backendBaseUrl);
+  useEffect(() => {
+    api
+      .post("/api/auth/refresh")
+      .then((response) => {
+        syncAccessToken(response.data.token);
+        setOrganization(response.data.organization || null);
+        return api.get("/api/auth/me");
+      })
+      .then((response) => {
+        setUser({
+          id: response.data.id,
+          name: response.data.name,
+          email: response.data.email,
+          role: response.data.role,
+          orgId: response.data.orgId
+        });
+        if (response.data.organization) {
+          setOrganization(response.data.organization);
+        }
+      })
+      .catch(() => {
+        clearAccessToken();
+        setToken("");
+      })
+      .finally(() => {
+        setRestoringSession(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!token || !user) return undefined;
+
+    const socket = io(backendBaseUrl, {
+      withCredentials: true,
+      auth: { token }
+    });
+
     socket.on("strategy:welcome", (data) => {
-      setUpdates((prev) => [data.message, ...prev].slice(0, 5));
+      setUpdates((prev) =>
+        [{ key: `welcome-${Date.now()}`, text: data.message }, ...prev].slice(0, 5)
+      );
     });
     socket.on("strategy:updated", (data) => {
-      setUpdates((prev) => [`${data.update.type} at ${new Date(data.timestamp).toLocaleTimeString()}`, ...prev].slice(0, 5));
+      setUpdates((prev) =>
+        [
+          {
+            key: `update-${data.timestamp}-${prev.length}`,
+            text: `${data.update.type} at ${new Date(data.timestamp).toLocaleTimeString()}`
+          },
+          ...prev
+        ].slice(0, 5)
+      );
+    });
+    socket.on("connect_error", (err) => {
+      pushError(err.message || "Failed to connect to live updates");
     });
 
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [token, user, pushError]);
 
   useEffect(() => {
+    if (!user) return;
     loadInitiatives();
-  }, [token]);
+    loadOkrs();
+    loadPythonVisuals();
+    loadRevenueData();
+    if (user.role === "admin") {
+      loadAuditLogs();
+      loadTeamData();
+    }
+  }, [user?.id, user?.role]);
+
+  if (restoringSession) {
+    return <LoadingScreen message="Restoring your strategy workspace..." />;
+  }
 
   if (!user) {
     return (
-      <main className="layout">
-        <h1>Enterprise Transformation & Strategy</h1>
-        <p>Sign in to access role-based strategy workspace.</p>
-        <div className="card">
-          <h2>{authMode === "register" ? "Register" : "Login"}</h2>
-          {authMode === "register" && (
-            <>
-              <label htmlFor="name">Name</label>
-              <input id="name" value={name} onChange={(event) => setName(event.target.value)} />
-              <label htmlFor="role">Role</label>
-              <select id="role" value={role} onChange={(event) => setRole(event.target.value)}>
-                <option value="admin">Admin</option>
-                <option value="analyst">Analyst</option>
-                <option value="executive">Executive</option>
-              </select>
-            </>
-          )}
-          <label htmlFor="email">Email</label>
-          <input id="email" value={email} onChange={(event) => setEmail(event.target.value)} />
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-          {error && <p className="error">{error}</p>}
-          <button onClick={authenticate}>{authMode === "register" ? "Create Account" : "Login"}</button>
-          <button className="secondary" onClick={() => setAuthMode(authMode === "register" ? "login" : "register")}>
-            Switch to {authMode === "register" ? "Login" : "Register"}
-          </button>
-        </div>
-      </main>
+      <AuthPage
+        authMode={authMode}
+        name={name}
+        email={email}
+        password={password}
+        organizationName={organizationName}
+        inviteToken={inviteToken}
+        errors={errors}
+        onDismissError={dismissError}
+        onNameChange={setName}
+        onEmailChange={setEmail}
+        onPasswordChange={setPassword}
+        onOrganizationNameChange={setOrganizationName}
+        onInviteTokenChange={setInviteToken}
+        onAuthenticate={authenticate}
+        onToggleMode={() => setAuthMode(authMode === "register" ? "login" : "register")}
+      />
     );
   }
 
+  const overviewStats = (
+    <div className="stats-grid">
+      <StatCard
+        label="Active objectives"
+        value={okrSummary?.totalObjectives ?? 0}
+        hint="Organization-wide OKRs"
+      />
+      <StatCard
+        label="Average progress"
+        value={`${okrSummary?.averageProgress ?? 0}%`}
+        hint="Across all key results"
+        tone="accent"
+      />
+      <StatCard
+        label="At-risk key results"
+        value={okrSummary?.atRiskKeyResults ?? 0}
+        hint="Needs executive attention"
+        tone="warn"
+      />
+      <StatCard
+        label="Initiatives"
+        value={initiatives.length}
+        hint="Execution workstreams in flight"
+      />
+    </div>
+  );
+
+  const okrSection = (
+    <OkrPanel
+      okrs={okrs}
+      okrSummary={okrSummary}
+      canManage={canManageOkrs}
+      objectiveTitle={objectiveTitle}
+      objectivePeriod={objectivePeriod}
+      keyResultTitle={keyResultTitle}
+      keyResultTarget={keyResultTarget}
+      onObjectiveTitleChange={setObjectiveTitle}
+      onObjectivePeriodChange={setObjectivePeriod}
+      onKeyResultTitleChange={setKeyResultTitle}
+      onKeyResultTargetChange={setKeyResultTarget}
+      onCreateOkr={createOkr}
+      onCheckIn={checkInKeyResult}
+      onRefresh={loadOkrs}
+    />
+  );
+
+  const initiativesSection = (
+    <InitiativesPanel
+      initiatives={initiatives}
+      canManage={canManageOkrs}
+      initiativeName={initiativeName}
+      onInitiativeNameChange={setInitiativeName}
+      onCreateInitiative={createInitiative}
+      onRefresh={loadInitiatives}
+    />
+  );
+
+  const scenarioSection = (
+    <ScenarioLab
+      investment={investment}
+      upliftPercent={upliftPercent}
+      paybackMonths={paybackMonths}
+      forecast={forecast}
+      onInvestmentChange={setInvestment}
+      onUpliftChange={setUpliftPercent}
+      onPaybackChange={setPaybackMonths}
+      onRunScenario={runScenario}
+    />
+  );
+
+  const pythonSection = (
+    <PythonVisuals
+      visuals={pythonVisuals}
+      loading={visualsLoading}
+      error={visualsError}
+      title="Executive Python analytics"
+      onRefresh={loadPythonVisuals}
+    />
+  );
+
+  const teamSection = (
+    <TeamPanel
+      orgProfile={orgProfile}
+      members={members}
+      invites={invites}
+      onRefresh={loadTeamData}
+      onCreateInvite={createInvite}
+      lastInviteToken={lastInviteToken}
+    />
+  );
+
+  const auditSection = <AuditLogPanel logs={auditLogs} onRefresh={loadAuditLogs} />;
+
+  let sectionContent;
+  if (activeSection === "overview") {
+    sectionContent = (
+      <>
+        {overviewStats}
+        {revenueData.length > 0 ? <RevenueChart data={revenueData} /> : null}
+        {pythonSection}
+        <div className="dashboard-grid">
+          <div>{okrSection}</div>
+          <LiveFeed updates={updates} />
+        </div>
+        <div className="dashboard-grid">
+          {scenarioSection}
+          {initiativesSection}
+        </div>
+      </>
+    );
+  } else if (activeSection === "okrs") {
+    sectionContent = (
+      <>
+        {overviewStats}
+        {okrSection}
+      </>
+    );
+  } else if (activeSection === "initiatives") {
+    sectionContent = initiativesSection;
+  } else if (activeSection === "scenario") {
+    sectionContent = scenarioSection;
+  } else if (activeSection === "team") {
+    sectionContent = teamSection;
+  } else if (activeSection === "audit") {
+    sectionContent = auditSection;
+  } else {
+    sectionContent = pythonSection;
+  }
+
   return (
-    <main className="layout">
-      <h1>Enterprise Transformation & Strategy</h1>
-      <p>
-        Signed in as <strong>{user.name}</strong> ({user.role}). Run ROI scenarios, manage initiatives, and track updates.
-      </p>
-
-      <div className="card">
-        <h2>Scenario Lab</h2>
-        <label htmlFor="investment">Investment ($)</label>
-        <input
-          id="investment"
-          type="number"
-          value={investment}
-          onChange={(event) => setInvestment(Number(event.target.value || 0))}
-        />
-        <button onClick={runScenario}>Run Forecast</button>
-
-        {forecast && (
-          <div className="result">
-            <p>
-              <strong>Projected ROI:</strong> {(forecast.projectedROI * 100).toFixed(2)}%
-            </p>
-            <p>
-              <strong>Payback:</strong> {forecast.paybackMonths} months
-            </p>
-          </div>
-        )}
-      </div>
-
-      <div className="card">
-        <h2>Initiatives</h2>
-        {(user.role === "admin" || user.role === "analyst") && (
-          <>
-            <label htmlFor="initiativeName">Initiative Name</label>
-            <input
-              id="initiativeName"
-              value={initiativeName}
-              onChange={(event) => setInitiativeName(event.target.value)}
-            />
-            <button onClick={createInitiative}>Add Initiative</button>
-          </>
-        )}
-        <button className="secondary" onClick={loadInitiatives}>
-          Refresh
-        </button>
-        <ul>
-          {initiatives.map((item) => (
-            <li key={item._id}>
-              {item.name} - {item.status} - ROI {(item.expectedROI * 100).toFixed(1)}%
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <RevenueChart data={chartData} />
-
-      <div className="card">
-        <h2>Live Strategy Feed</h2>
-        <ul>
-          {updates.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-      </div>
-    </main>
+    <AppShell
+      user={user}
+      organization={organization}
+      activeSection={activeSection}
+      onSectionChange={setActiveSection}
+      onLogout={logout}
+      errors={errors}
+      onDismissError={dismissError}
+    >
+      {sectionContent}
+    </AppShell>
   );
 }

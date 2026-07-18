@@ -1,4 +1,26 @@
 const jwt = require("jsonwebtoken");
+const { jwtSecret } = require("../utils/tokens");
+
+// Self-registration allows analyst/executive only; admin must be seeded or assigned separately.
+const ALLOWED_REGISTRATION_ROLES = ["analyst", "executive"];
+
+function validateRegistrationRole(role) {
+  const requestedRole = role || "executive";
+  if (!ALLOWED_REGISTRATION_ROLES.includes(requestedRole)) {
+    return {
+      ok: false,
+      message: "Registration allowed only for analyst or executive roles"
+    };
+  }
+  return { ok: true, role: requestedRole };
+}
+
+function validateInviteRole(role) {
+  if (role === "admin") {
+    return { ok: true, role: "admin" };
+  }
+  return validateRegistrationRole(role);
+}
 
 function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization || "";
@@ -9,7 +31,7 @@ function requireAuth(req, res, next) {
   }
 
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET || "dev-secret");
+    const payload = jwt.verify(token, jwtSecret());
     req.user = payload;
     return next();
   } catch (_error) {
@@ -26,4 +48,18 @@ function allowRoles(...roles) {
   };
 }
 
-module.exports = { requireAuth, allowRoles };
+function requireOrg(req, res, next) {
+  if (!req.user?.orgId) {
+    return res.status(403).json({ message: "Organization context required" });
+  }
+  return next();
+}
+
+module.exports = {
+  requireAuth,
+  allowRoles,
+  requireOrg,
+  validateRegistrationRole,
+  validateInviteRole,
+  ALLOWED_REGISTRATION_ROLES
+};

@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+python-analytics/venv/
+__pycache__/
+*.py[cod]
+
+# Build output
+frontend/dist/
+build/
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs & OS
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+
+# Docker
+mongo_data/

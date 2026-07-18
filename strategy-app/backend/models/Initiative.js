@@ -37,6 +37,7 @@ const initiativeSchema = new mongoose.Schema(
     expectedROI: { type: Number, required: true },
     kpis: [kpiSnapshotSchema],
     milestones: [milestoneSchema],
+    orgId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true, index: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }
   },
   { timestamps: true }
