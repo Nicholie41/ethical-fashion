@@ -12,7 +12,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // --- CORS ---
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'https://ethical-fashion.vercel.app'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
