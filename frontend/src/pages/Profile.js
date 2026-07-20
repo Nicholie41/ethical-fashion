@@ -2,6 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaUserCircle, FaEdit, FaSave, FaTimes, FaSignOutAlt, FaTrashAlt, FaEnvelope, FaBoxOpen, FaCheckCircle, FaClock, FaTimesCircle, FaDollarSign, FaSignInAlt, FaDesktop } from "react-icons/fa";
 
+const API_ROOT = process.env.REACT_APP_API_URL
+  ? process.env.REACT_APP_API_URL.replace('/api', '')
+  : "http://localhost:5000";
+
+
 function Profile({ token, onLogout }) {
   const [profile, setProfile] = useState(null);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -31,7 +36,7 @@ function Profile({ token, onLogout }) {
   const [loginsError, setLoginsError] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/profile", {
+    fetch(`${API_ROOT}/api/profile`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -44,7 +49,7 @@ function Profile({ token, onLogout }) {
   useEffect(() => {
     if (!token) return;
     setOrdersLoading(true);
-    fetch("http://localhost:5000/api/orders/mine", {
+    fetch(`${API_ROOT}/api/orders/mine`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -69,7 +74,7 @@ function Profile({ token, onLogout }) {
   useEffect(() => {
     if (!token) return;
     setLoginsLoading(true);
-    fetch("http://localhost:5000/api/profile/logins", {
+    fetch(`${API_ROOT}/api/profile/logins`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -88,7 +93,7 @@ function Profile({ token, onLogout }) {
     e.preventDefault();
     setMessage("");
     setError("");
-    const res = await fetch("http://localhost:5000/api/profile/password", {
+    const res = await fetch(`${API_ROOT}/api/profile/password`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -107,7 +112,7 @@ function Profile({ token, onLogout }) {
     e.preventDefault();
     setEditMessage("");
     setEditError("");
-    const res = await fetch("http://localhost:5000/api/profile", {
+    const res = await fetch(`${API_ROOT}/api/profile`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -128,7 +133,7 @@ function Profile({ token, onLogout }) {
     setDeleteLoading(true);
     setDeleteError("");
     try {
-      const res = await fetch("http://localhost:5000/api/profile", {
+      const res = await fetch(`${API_ROOT}/api/profile`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

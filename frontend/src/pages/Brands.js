@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+const API_ROOT = process.env.REACT_APP_API_URL
+  ? process.env.REACT_APP_API_URL.replace('/api', '')
+  : "http://localhost:5000";
+
+
 // Demo fallback images for known brands
 const brandImages = {
   "EcoWear": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=facearea&w=256&q=80",
@@ -10,7 +15,7 @@ const brandImages = {
   "Conscious Cotton": "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=facearea&w=256&q=80"
 };
 
-const API_URL = "http://localhost:5000/api/brands";
+const API_URL = `${API_ROOT}/api/brands`;
 
 export default function Brands({ user }) {
   const [brands, setBrands] = useState([]);

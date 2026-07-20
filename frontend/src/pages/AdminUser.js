@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 
-const API_ROOT = "http://localhost:5000";
+const API_ROOT = process.env.REACT_APP_API_URL 
+  ? process.env.REACT_APP_API_URL.replace('/api', '') 
+  : "http://localhost:5000";
 
 // Utility for avatar initials
 function getInitials(name) {

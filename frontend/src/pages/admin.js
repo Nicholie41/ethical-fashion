@@ -12,7 +12,9 @@ function getInitials(name) {
     : "?";
 }
 
-const API_ROOT = "http://localhost:5000";
+const API_ROOT = process.env.REACT_APP_API_URL 
+  ? process.env.REACT_APP_API_URL.replace('/api', '') 
+  : "http://localhost:5000";
 const DASHBOARD_BG_URL =
   "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1500&q=80";
 

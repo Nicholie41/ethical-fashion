@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FaEdit, FaTrash, FaCheckCircle, FaHourglassHalf, FaTimes, FaGlobe } from "react-icons/fa";
 
+const API_ROOT = process.env.REACT_APP_API_URL
+  ? process.env.REACT_APP_API_URL.replace('/api', '')
+  : "http://localhost:5000";
+
+
 /**
  * SupplierBrands page
  * Shows supplier's uploaded brands (pending & approved), lets them add, edit, or delete brands.
@@ -33,7 +38,7 @@ export default function SupplierBrands({ user, token }) {
       return;
     }
     try {
-      const res = await fetch("http://localhost:5000/api/brands/mine", {
+      const res = await fetch(`${API_ROOT}/api/brands/mine`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -73,7 +78,7 @@ export default function SupplierBrands({ user, token }) {
     formData.append("image", image);
 
     try {
-      const res = await fetch("http://localhost:5000/api/brands", {
+      const res = await fetch(`${API_ROOT}/api/brands`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -135,7 +140,7 @@ export default function SupplierBrands({ user, token }) {
     if (editImage) formData.append("image", editImage);
 
     try {
-      const res = await fetch(`http://localhost:5000/api/brands/${editingId}`, {
+      const res = await fetch(`${API_ROOT}/api/brands/${editingId}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -164,7 +169,7 @@ export default function SupplierBrands({ user, token }) {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:5000/api/brands/${brandId}`, {
+      const res = await fetch(`${API_ROOT}/api/brands/${brandId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}` },

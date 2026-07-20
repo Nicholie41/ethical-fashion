@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FaEdit, FaTrash, FaCheckCircle, FaHourglassHalf, FaSave, FaTimes, FaBoxOpen, FaPlus, FaImage, FaPen, FaTrashAlt, FaEye, FaMousePointer, FaShoppingCart, FaHistory } from "react-icons/fa";
 
+const API_ROOT = process.env.REACT_APP_API_URL
+  ? process.env.REACT_APP_API_URL.replace('/api', '')
+  : "http://localhost:5000";
+
+
 /**
  * SupplierProducts page
  * Shows supplier's uploaded products (pending & approved), lets them add, edit, or delete products.
@@ -29,7 +34,7 @@ export default function SupplierProducts({ user, token }) {
   // Load supplier's products from backend using /api/products/mine
   const loadProducts = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/products/mine", {
+      const res = await fetch(`${API_ROOT}/api/products/mine`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -46,7 +51,7 @@ export default function SupplierProducts({ user, token }) {
   // Load supplier's brands
   const loadBrands = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/brands/mine", {
+      const res = await fetch(`${API_ROOT}/api/brands/mine`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -75,7 +80,7 @@ export default function SupplierProducts({ user, token }) {
       const newAnalytics = {};
       for (const p of products) {
         try {
-          const res = await fetch(`http://localhost:5000/api/products/${p._id}/analytics`);
+          const res = await fetch(`${API_ROOT}/api/products/${p._id}/analytics`);
           if (res.ok) {
             newAnalytics[p._id] = await res.json();
           }
@@ -91,7 +96,7 @@ export default function SupplierProducts({ user, token }) {
     async function fetchStats() {
       if (!token) return;
       try {
-        const res = await fetch("http://localhost:5000/api/products/mine/stats", {
+        const res = await fetch(`${API_ROOT}/api/products/mine/stats`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) setStats(await res.json());
@@ -114,7 +119,7 @@ export default function SupplierProducts({ user, token }) {
     formData.append("image", image);
 
     try {
-      const res = await fetch("http://localhost:5000/api/products", {
+      const res = await fetch(`${API_ROOT}/api/products`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -168,7 +173,7 @@ export default function SupplierProducts({ user, token }) {
     if (editImage) formData.append("image", editImage);
 
     try {
-      const res = await fetch(`http://localhost:5000/api/products/${editingId}`, {
+      const res = await fetch(`${API_ROOT}/api/products/${editingId}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -193,7 +198,7 @@ export default function SupplierProducts({ user, token }) {
     if (!window.confirm("Delete this product? This cannot be undone.")) return;
     setMessage("");
     try {
-      const res = await fetch(`http://localhost:5000/api/products/${productId}`, {
+      const res = await fetch(`${API_ROOT}/api/products/${productId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -239,7 +244,7 @@ export default function SupplierProducts({ user, token }) {
       setHistoryLoading(true);
       setHistoryError("");
       try {
-        const res = await fetch(`http://localhost:5000/api/products/${showHistoryId}/approval-history`, {
+        const res = await fetch(`${API_ROOT}/api/products/${showHistoryId}/approval-history`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {

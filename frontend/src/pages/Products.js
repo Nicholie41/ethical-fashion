@@ -3,6 +3,11 @@ import { fetchProducts } from "../api";
 import ProductCard from "../components/ProductCard";
 import ProductFilters from "../components/ProductFilters";
 
+const API_ROOT = process.env.REACT_APP_API_URL
+  ? process.env.REACT_APP_API_URL.replace('/api', '')
+  : "http://localhost:5000";
+
+
 // --- Payment Dashboard Component ---
 function PaymentDashboard({ cart, totalPrice, onBack }) {
   return (
@@ -106,13 +111,13 @@ export default function Products({ user }) {
 
   useEffect(() => {
     // Fetch brands
-    fetch("http://localhost:5000/api/brands")
+    fetch(`${API_ROOT}/api/brands`)
       .then((res) => res.json())
       .then((data) => setBrands(data))
       .catch(() => setBrands([]));
     
     // Fetch categories from products
-    fetch("http://localhost:5000/api/products")
+    fetch(`${API_ROOT}/api/products`)
       .then((res) => res.json())
       .then((data) => {
         const uniqueCategories = [...new Set(data.map(product => product.category).filter(Boolean))];
@@ -145,7 +150,7 @@ export default function Products({ user }) {
         if (filters.colors.length > 0) queryParams.append('colors', filters.colors.join(','));
         if (filters.sizes.length > 0) queryParams.append('sizes', filters.sizes.join(','));
 
-        const response = await fetch(`http://localhost:5000/api/products?${queryParams.toString()}`);
+        const response = await fetch(`${API_ROOT}/api/products?${queryParams.toString()}`);
         const data = await response.json();
         // Handle both old format (array) and new format (object with products array)
         setProducts(Array.isArray(data) ? data : (data.products || []));
@@ -210,7 +215,7 @@ export default function Products({ user }) {
       }
 
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/products", {
+      const res = await fetch(`${API_ROOT}/api/products`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
