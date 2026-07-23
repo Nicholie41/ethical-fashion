@@ -1,4 +1,4 @@
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = 'http://localhost:5000/api';
 
 // Helper to parse JSON safely
 async function safeParseJSON(res) {
@@ -11,6 +11,23 @@ async function safeParseJSON(res) {
 }
 
 // --- AUTH ---
+export async function googleLogin(credential, role) {
+  const res = await fetch(`${API_URL}/auth/google`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ credential, role })
+  });
+  const data = await safeParseJSON(res);
+  if (!res.ok) {
+    return { error: data.error || `Google sign-in failed with status ${res.status}` };
+  }
+  if (data.token && data.token !== "undefined" && data.token !== null) {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('role', data.role);
+  }
+  return data;
+}
+
 export async function login(username, password, role, adminId) {
   // Add role/adminId support for your login endpoint (if needed)
   const payload = { username, password };

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { login, signup } from "../api";
+import { login, signup, googleLogin } from "../api";
 import { useNavigate } from "react-router-dom";
 import { FaUser, FaLock, FaEye, FaEyeSlash, FaUserPlus, FaSignInAlt, FaGoogle, FaFacebookF, FaSpinner, FaMoon, FaSun } from "react-icons/fa";
+
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
 const ROLES = [
   { value: "", label: "Select Role" },
@@ -41,7 +43,73 @@ export default function LoginPage({ onLogin }) {
   }, [darkMode]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Load Google's Sign-In script once
+  useEffect(() => {
+    if (document.getElementById("google-identity-script")) return;
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.id = "google-identity-script";
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
+
+  const completeAuthSuccess = (result, fallbackRole) => {
+    let finalRole =
+      result.user && result.user.role
+        ? result.user.role.toLowerCase()
+        : result.role
+        ? result.role.toLowerCase()
+        : fallbackRole;
+
+    if (result.user) result.user.role = finalRole;
+
+    onLogin(result.user, result.token, finalRole);
+    setShowConfetti(true);
+    setTimeout(() => {
+      setShowConfetti(false);
+      if (finalRole === "admin") {
+        navigate("/admin");
+      } else if (finalRole === "supplier") {
+        navigate("/supplier-products");
+      } else {
+        navigate("/");
+      }
+    }, 1500);
+  };
+
+  const handleGoogleCredential = async (response) => {
+    setError("");
+    setGoogleLoading(true);
+    try {
+      const result = await googleLogin(response.credential, role || "customer");
+      if (result.error) {
+        setError(result.error);
+      } else if (result.token) {
+        completeAuthSuccess(result, role || "customer");
+      } else {
+        setError("No token received from Google sign-in. Please try again.");
+      }
+    } catch (err) {
+      setError("Google sign-in failed. Please try again.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleButtonClick = () => {
+    if (!window.google || !GOOGLE_CLIENT_ID) {
+      setError("Google sign-in is still loading. Please try again in a moment.");
+      return;
+    }
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleGoogleCredential
+    });
+    window.google.accounts.id.prompt();
+  };
 
   const resetFields = () => {
     setUsername("");
@@ -339,10 +407,14 @@ export default function LoginPage({ onLogin }) {
           {/* Social login buttons (placeholder) */}
           <div className="flex gap-4 justify-center mb-2">
             <div className="relative group">
-              <button type="button" className="ripple flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-gold bg-white/80 hover:bg-sage/40 text-primary font-bold shadow transition-all animate-btn-fade" disabled>
-                <FaGoogle className="text-red-500" /> Google
+              <button
+                type="button"
+                onClick={handleGoogleButtonClick}
+                disabled={googleLoading}
+                className="ripple flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-gold bg-white/80 hover:bg-sage/40 text-primary font-bold shadow transition-all animate-btn-fade disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {googleLoading ? <FaSpinner className="animate-spin text-red-500" /> : <FaGoogle className="text-red-500" />} Google
               </button>
-              <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 px-3 py-1 rounded bg-stone-800 text-gold text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity z-30 whitespace-nowrap shadow-lg">Coming soon!</span>
             </div>
             <div className="relative group">
               <button type="button" className="ripple flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-gold bg-white/80 hover:bg-sage/40 text-primary font-bold shadow transition-all animate-btn-fade" disabled>

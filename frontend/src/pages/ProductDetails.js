@@ -153,7 +153,7 @@ export default function ProductDetails({
             <img
               src={images[imgIdx]}
               alt={`${product.name} - Image ${imgIdx + 1}`}
-              className="rounded-xl object-contain w-full max-h-[380px] border border-green-100 shadow-lg transition-all duration-300"
+              className="rounded-xl object-cover w-full h-[380px] border border-green-100 shadow-lg transition-all duration-300"
               style={{ background: "#fff" }}
               onError={e => {
                 e.target.onerror = null;
