@@ -45,14 +45,36 @@ export default function LoginPage({ onLogin }) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
+  const googleCredentialHandlerRef = useRef(null);
+  const googleInitializedRef = useRef(false);
 
-  // Load Google's Sign-In script once
+  // Load Google's Sign-In script once, then initialize it exactly once
   useEffect(() => {
-    if (document.getElementById("google-identity-script")) return;
+    const initGoogle = () => {
+      if (googleInitializedRef.current || !window.google || !GOOGLE_CLIENT_ID) return;
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (response) => {
+          // Always call the latest handler, avoiding stale closures over role/navigate
+          if (googleCredentialHandlerRef.current) {
+            googleCredentialHandlerRef.current(response);
+          }
+        }
+      });
+      googleInitializedRef.current = true;
+    };
+
+    const existingScript = document.getElementById("google-identity-script");
+    if (existingScript) {
+      initGoogle();
+      return;
+    }
+
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.id = "google-identity-script";
     script.async = true;
+    script.onload = initGoogle;
     document.body.appendChild(script);
   }, []);
 
@@ -99,15 +121,16 @@ export default function LoginPage({ onLogin }) {
     }
   };
 
+  // Keep the ref pointing at the latest version of the handler (fresh role/navigate each render)
+  useEffect(() => {
+    googleCredentialHandlerRef.current = handleGoogleCredential;
+  });
+
   const handleGoogleButtonClick = () => {
     if (!window.google || !GOOGLE_CLIENT_ID) {
       setError("Google sign-in is still loading. Please try again in a moment.");
       return;
     }
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleGoogleCredential
-    });
     window.google.accounts.id.prompt();
   };
 
